@@ -1,0 +1,79 @@
+#!/bin/bash
+
+text="===================================================="
+
+pkgNeeded="qemu"
+
+# Check which package manager to use to install the $pkgNeeded
+VerifyPkgAndInstall() {
+if [ -x "$(command -v apk)" ]; then pkgmgr="apk"
+    elif [ -x "$(command -v apt-get)" ]; then pkgmgr="apt-get"
+    elif [ -x "$(command -v zypper)" ]; then pkgmgr="zypper"
+    elif [ -x "$(command -v xbps)" ]; then pkgmgr="xbps"
+    elif [ -x "$(command -v dnf)" ]; then pkgmgr="dnf"
+    else echo "Can't find a package manager!!" && exit 2
+fi
+   sudo $pkgmgr install $pkgNeeded || exit 2
+}
+
+[ ! -x qemu-system-x86_64 ] || [ ! -x qemu-img ] && echo "Missing qemu-system-x86_64 or qemu-img" && exit 2
+# Regex search
+#reg="^.*\.iso$"
+
+# Simple help screen
+usage() {
+    echo "$0 [img file/-mi/--make-img] [iso file/-nf/--not-first]"
+    echo "-mi, --make-img"
+    echo "      Use this flag to generate an img file"
+    echo "    and start the new virtual machine.     "
+    echo ""
+    echo "-nf, --not-first"
+    echo "      Use this flag to specify if you have"
+    echo "    or not installed an iso in an img file."
+}
+
+if [[ $# -gt 2 ]]; then
+    echo -e "${text}"
+    echo "Not the right amount of arguments!!"
+    usage
+    exit 1
+#elif [[ ! "$2" =~ $reg ]]; then
+#    echo "The file format it's not .iso format..."
+#    exit 1
+else 
+    # Verify the arguments
+    case $1 in
+        "-mi"|"--make-img")
+            echo "Generating image.img" && qemu-img create -f qcow2 image.img 20G || exit 2
+            echo "Starting the virtual machine with $2..."
+            qemu-system-x86_64 -m 1024 -boot d -enable-kvm \
+                -smp 3 -net nic -net user -hda "$1" "$2" ||
+                echo "Exit code from qemu: $?" && exit 2
+            ;;
+        *)
+            echo "Wasn't possible to understand $1. Please, check the sytax..."
+            usage
+            exit 1
+    esac
+    case $2 in
+        # '${$2[@]/*\.iso*/}'
+        *.iso)
+            qemu-system-x86_64 -m 1024 -boot d -enable-kvm \
+                -smp 3 -net nic -net user -hda "$1" "$2" ||
+                echo "Exit code from qemu: $?" && exit 2
+            ;;
+        "-nf"|"--not-first"|"")
+            qemu-system-x86_64 -m 1024 -boot d -enable-kvm \
+                -smp 3 -net nic -net user -hda "$1" ||
+                echo "Exit code from qemu: $?" && exit 2
+            ;;
+        *)
+            echo -e "$2"': invalid argument'
+            usage
+            exit 1
+            ;;
+    esac
+fi
+
+
+#echo 61 64 61 6C 38 37 37 | xxd -r -p | xargs -I{} printf "{}\n"
