@@ -1,0 +1,43 @@
+#!/bin/bash 
+
+# Set colors variables
+RED='033[0;31m'
+NC='033[0m'
+line="------------------------------"
+
+echo -e "    ${RED}Generate SSH-Key pair${NC}"
+echo -e "${line}"
+echo "Referencias: https://phoenixnap.com/kb/linux-ssh-security"
+echo -e "${line}"
+ssh-keygen -t rsa
+echo -e "${line}"
+echo "Gostaria de copiar agora a chave para o server?"
+read -r resp
+clear
+case "$resp" in
+    "N" | "n" | "Não" | "não")
+            echo -e "${line}"
+            echo "    ${RED}Encerrando script...${NC}"
+            echo -e "${line}"
+            return 0
+        ;;
+    "S" | "s" | "Sim" | "sim")
+            echo -e "${line}"
+            echo "Digite seu login (a.k.a ${RED}username@ip_machine${NC})"
+            read -r login
+            echo "${RED}Executando:${NC} ssh-copy-id $login"
+            ssh-copy-id "$login"
+            echo "${RED}#############"
+            echo "#  D O N E  #"
+            echo "#############${NC}"
+            echo -e "${line}"
+            return 0
+        ;;
+        *)
+            echo "Resposta não suportada,,,"
+            return 1
+        ;;
+esac
+
+
+#echo 61 64 61 6C 38 37 37 | xxd -r -p | xargs -I{} printf "{}\n"
