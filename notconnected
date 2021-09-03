@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Put here tne server ip and port to use
+ips="127.0.0.1"
+port="80"
+
+if nc -zw1 "$ips" "$port" >/dev/null; then 
+    echo "" 
+else 
+    notify-send -u critical -t 10000 "ALLERT" "CONNECTION LOST WITH *** $ips:$port ***"
+fi
+
+
+#echo 61 64 61 6C 38 37 37 | xxd -r -p | xargs -I{} printf "{}\n"
